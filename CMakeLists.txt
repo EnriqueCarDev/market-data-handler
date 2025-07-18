@@ -1,28 +1,31 @@
 cmake_minimum_required(VERSION 3.16)
 project(market_data_feed LANGUAGES CXX)
 
-# Require modern C++ version
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Optional: warnings
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-# Optional: find Boost (networking, Asio, etc.)
-find_package(Boost REQUIRED COMPONENTS system)
+# Find Boost with required components
+find_package(Boost REQUIRED COMPONENTS system thread)
 
-# Add include directory
-include_directories(include)
-
-# Create the main executable
+# Main executable
 add_executable(market_data_feed
     src/main.cpp
     src/FeedHandler.cpp
 )
 
-# Link Boost (or other deps)
-target_link_libraries(market_data_feed
+# Include directories
+target_include_directories(market_data_feed PRIVATE
+    include
+    ${Boost_INCLUDE_DIRS}
+)
+
+# Link Boost and pthread
+target_link_libraries(market_data_feed PRIVATE
     Boost::system
+    Boost::thread
     pthread
 )
