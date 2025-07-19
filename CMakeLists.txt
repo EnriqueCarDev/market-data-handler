@@ -10,22 +10,28 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # Find Boost with required components
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(OpenSSL REQUIRED)
+
+link_directories(${OPENSSL_LIBRARIES})
 
 # Main executable
 add_executable(market_data_feed
     src/main.cpp
     src/FeedHandler.cpp
+    
 )
 
 # Include directories
 target_include_directories(market_data_feed PRIVATE
     include
-    ${Boost_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR}
 )
 
 # Link Boost and pthread
 target_link_libraries(market_data_feed PRIVATE
     Boost::system
     Boost::thread
+    OpenSSL::SSL
+    OpenSSL::Crypto
     pthread
 )
