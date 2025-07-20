@@ -1,60 +1,22 @@
-#include <boost/asio/connect.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/ssl.hpp>
-#include <boost/beast/websocket.hpp>
-#include <cstdlib>
-#include <iostream>
-#include <string>
-
-namespace beast = boost::beast;
-namespace http = beast::http;
-namespace websocket = beast::websocket;
-namespace net = boost::asio;
-namespace ssl = net::ssl;
-using tcp = net::ip::tcp;
+#include "WebSocketClient.hpp"
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ssl/context.hpp>
 
 int main() {
-  try {
-    // IO Context and SSL Context
-    net::io_context ioc;
-    ssl::context ctx{ssl::context::tlsv12_client};
 
-    // Verify SSL certs
-    ctx.set_default_verify_paths();
+  const std::string host = "stream.binance.com";
+  const std::string port = "9443";
+  const std::string target = "/ws/btcusdt@trade";
 
-    // WebSocket stream with SSL
-    websocket::stream<beast::ssl_stream<tcp::socket>> ws{ioc, ctx};
+  net::io_context ioc;
+  ssl::context ctx{ssl::context::tlsv12_client};
 
-    // Resolve the Binance WSS endpoint
-    const std::string host = "stream.binance.com";
-    const std::string port = "9443";
-    const std::string target = "/ws/btcusdt@trade";
+  ctx.set_verify_mode(ssl::verify_none);
 
-    tcp::resolver resolver{ioc};
-    auto const results = resolver.resolve(host, port);
+  std::make_shared<WebSocketSession>(ioc, ctx)->run(host.c_str(), port.c_str(),
+                                                    target.c_str());
 
-    // Connect TCP
-    net::connect(ws.next_layer().next_layer(), results.begin(), results.end());
+  ioc.run();
 
-    // SSL Handshake
-    ws.next_layer().handshake(ssl::stream_base::client);
-
-    // WebSocket handshake
-    ws.handshake(host, target);
-
-    std::cout << "✅ Connected to Binance WebSocket\n";
-
-    // Receive messages
-    for (;;) {
-      beast::flat_buffer buffer;
-      ws.read(buffer);
-      std::cout << beast::make_printable(buffer.data()) << "\n";
-    }
-
-  } catch (const std::exception &e) {
-    std::cerr << "❌ Error: " << e.what() << std::endl;
-    return EXIT_FAILURE;
-  }
+  return EXIT_SUCCESS;
 }
