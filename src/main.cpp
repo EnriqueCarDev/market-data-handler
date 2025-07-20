@@ -1,38 +1,22 @@
-#include <array>
-#include <boost/asio.hpp>
-#include <iostream>
-#include <thread>
+#include "WebSocketClient.hpp"
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ssl/context.hpp>
 
-using boost::asio::ip::udp;
+int main() {
 
-int main(int argc, char *argv[]) {
-  try {
-    if (argc != 2) {
-      std::cerr << "Usage: client <host>" << std::endl;
-      return 1;
-    }
+  const std::string host = "stream.binance.com";
+  const std::string port = "9443";
+  const std::string target = "/ws/btcusdt@trade";
 
-    boost::asio::io_context io_context;
+  net::io_context ioc;
+  ssl::context ctx{ssl::context::tlsv12_client};
 
-    udp::resolver resolver(io_context);
-    udp::endpoint receiver_endpoint =
-        *resolver.resolve(udp::v4(), argv[1], "daytime").begin();
+  ctx.set_verify_mode(ssl::verify_none);
 
-    udp::socket socket(io_context);
-    socket.open(udp::v4());
+  std::make_shared<WebSocketSession>(ioc, ctx)->run(host.c_str(), port.c_str(),
+                                                    target.c_str());
 
-    std::array<char, 1> send_buf = {{0}};
-    socket.send_to(boost::asio::buffer(send_buf), receiver_endpoint);
+  ioc.run();
 
-    std::array<char, 128> recv_buf;
-    udp::endpoint sender_endpoint;
-    size_t len =
-        socket.receive_from(boost::asio::buffer(recv_buf), sender_endpoint);
-
-    std::cout.write(recv_buf.data(), len);
-  } catch (const std::exception &e) {
-    std::cerr << e.what() << '\n';
-  }
-
-  return 0;
-};
+  return EXIT_SUCCESS;
+}
