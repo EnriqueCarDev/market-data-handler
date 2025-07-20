@@ -1,60 +1,38 @@
-#include <boost/asio/connect.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/ssl.hpp>
-#include <boost/beast/websocket.hpp>
-#include <cstdlib>
+#include <array>
+#include <boost/asio.hpp>
 #include <iostream>
-#include <string>
+#include <thread>
 
-namespace beast = boost::beast;
-namespace http = beast::http;
-namespace websocket = beast::websocket;
-namespace net = boost::asio;
-namespace ssl = net::ssl;
-using tcp = net::ip::tcp;
+using boost::asio::ip::udp;
 
-int main() {
+int main(int argc, char *argv[]) {
   try {
-    // IO Context and SSL Context
-    net::io_context ioc;
-    ssl::context ctx{ssl::context::tlsv12_client};
-
-    // Verify SSL certs
-    ctx.set_default_verify_paths();
-
-    // WebSocket stream with SSL
-    websocket::stream<beast::ssl_stream<tcp::socket>> ws{ioc, ctx};
-
-    // Resolve the Binance WSS endpoint
-    const std::string host = "stream.binance.com";
-    const std::string port = "9443";
-    const std::string target = "/ws/btcusdt@trade";
-
-    tcp::resolver resolver{ioc};
-    auto const results = resolver.resolve(host, port);
-
-    // Connect TCP
-    net::connect(ws.next_layer().next_layer(), results.begin(), results.end());
-
-    // SSL Handshake
-    ws.next_layer().handshake(ssl::stream_base::client);
-
-    // WebSocket handshake
-    ws.handshake(host, target);
-
-    std::cout << "✅ Connected to Binance WebSocket\n";
-
-    // Receive messages
-    for (;;) {
-      beast::flat_buffer buffer;
-      ws.read(buffer);
-      std::cout << beast::make_printable(buffer.data()) << "\n";
+    if (argc != 2) {
+      std::cerr << "Usage: client <host>" << std::endl;
+      return 1;
     }
 
+    boost::asio::io_context io_context;
+
+    udp::resolver resolver(io_context);
+    udp::endpoint receiver_endpoint =
+        *resolver.resolve(udp::v4(), argv[1], "daytime").begin();
+
+    udp::socket socket(io_context);
+    socket.open(udp::v4());
+
+    std::array<char, 1> send_buf = {{0}};
+    socket.send_to(boost::asio::buffer(send_buf), receiver_endpoint);
+
+    std::array<char, 128> recv_buf;
+    udp::endpoint sender_endpoint;
+    size_t len =
+        socket.receive_from(boost::asio::buffer(recv_buf), sender_endpoint);
+
+    std::cout.write(recv_buf.data(), len);
   } catch (const std::exception &e) {
-    std::cerr << "❌ Error: " << e.what() << std::endl;
-    return EXIT_FAILURE;
+    std::cerr << e.what() << '\n';
   }
-}
+
+  return 0;
+};

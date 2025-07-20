@@ -17,7 +17,7 @@ link_directories(${OPENSSL_LIBRARIES})
 # Main executable
 add_executable(market_data_feed
     src/main.cpp
-    src/FeedHandler.cpp
+    src/WebSocketClient.cpp
     
 )
 
