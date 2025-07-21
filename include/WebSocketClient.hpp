@@ -1,7 +1,5 @@
 #pragma once
 
-// #include "example/common/root_certificate.hpp"
-
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -30,7 +28,6 @@ public:
                   tcp::resolver::results_type::endpoint_type ep);
   void on_ssl_handshake(beast::error_code ec);
   void on_handshake(beast::error_code ec);
-  void on_write(beast::error_code ec, std::size_t bytes_transferred);
   void on_read(beast::error_code ec, std::size_t bytes_transferred);
   void do_read();
   void on_close(beast::error_code ec);
