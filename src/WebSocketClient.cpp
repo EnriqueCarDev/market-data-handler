@@ -1,4 +1,6 @@
 #include "WebSocketClient.hpp"
+#include "Trade.hpp"
+#include "TradeQueue.hpp"
 #include <iostream>
 
 void fail(beast::error_code ec, char const *what) {
@@ -89,7 +91,14 @@ void WebSocketSession::on_read(beast::error_code ec,
     return fail(ec, "read");
 
   std::cout << beast::make_printable(buffer_.data()) << std::endl;
+
+  std::string message = beast::buffers_to_string(buffer_.data());
+
   buffer_.consume(buffer_.size());
+
+  model::Trade trade;
+
+  //   TradeQueue::enqueue()
 
   do_read();
 }
