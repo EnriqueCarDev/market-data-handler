@@ -51,7 +51,6 @@ void WebSocketSession::on_connect(
   beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
   host_ += ':' + std::to_string(ep.port());
 
-  // SSL handshake
   ws_.next_layer().async_handshake(
       ssl::stream_base::client,
       beast::bind_front_handler(&WebSocketSession::on_ssl_handshake,
@@ -95,10 +94,6 @@ void WebSocketSession::on_read(beast::error_code ec,
   std::string message = beast::buffers_to_string(buffer_.data());
 
   buffer_.consume(buffer_.size());
-
-  model::Trade trade;
-
-  //   TradeQueue::enqueue()
 
   do_read();
 }
