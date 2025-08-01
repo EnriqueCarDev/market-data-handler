@@ -1,6 +1,4 @@
 #include "WebSocketClient.hpp"
-// #include "Trade.hpp"
-// #include "TradeQueue.hpp"
 #include <iostream>
 
 void fail(beast::error_code ec, char const *what) {
