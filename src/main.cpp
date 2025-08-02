@@ -2,6 +2,7 @@
 #include "WebSocketClient.hpp"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <memory>
 #include <thread>
 
@@ -22,8 +23,9 @@ int main() {
   auto session = std::make_shared<WebSocketSession>(ioc, ctx, raw_queue);
 
   session->run(host.c_str(), port.c_str(), target.c_str());
+  boost::asio::thread_pool parse_pool(2);
 
-  std::thread consumer_thread([raw_queue, trade_queue] {
+  boost::asio::post(parse_pool, [raw_queue, trade_queue] {
     MessageParser message_parser(raw_queue, trade_queue);
     while (true) {
       message_parser.run();
@@ -31,7 +33,7 @@ int main() {
   });
 
   ioc.run();
-  consumer_thread.join();
+  parse_pool.join();
 
   return EXIT_SUCCESS;
 }
