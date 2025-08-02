@@ -22,7 +22,8 @@ void fail(beast::error_code ec, char const *what);
 
 class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
 public:
-  WebSocketSession(net::io_context &ioc, ssl::context &ctx);
+  WebSocketSession(net::io_context &ioc, ssl::context &ctx,
+                   std::shared_ptr<ThreadSafeQueue<std::string>> raw_queue);
   void run(char const *host, char const *port, char const *target);
   void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
   void on_connect(beast::error_code ec,
@@ -32,7 +33,6 @@ public:
   void on_read(beast::error_code ec, std::size_t bytes_transferred);
   void do_read();
   void on_close(beast::error_code ec);
-  std::shared_ptr<ThreadSafeQueue<std::string>> &get_queue();
 
 private:
   tcp::resolver resolver_;

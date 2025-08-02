@@ -5,9 +5,11 @@ void fail(beast::error_code ec, char const *what) {
   std::cerr << what << ": " << ec.message() << "\n";
 }
 
-WebSocketSession::WebSocketSession(net::io_context &ioc, ssl::context &ctx)
+WebSocketSession::WebSocketSession(
+    net::io_context &ioc, ssl::context &ctx,
+    std::shared_ptr<ThreadSafeQueue<std::string>> raw_queue)
     : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc), ctx),
-      queue_(std::make_shared<ThreadSafeQueue<std::string>>()) {}
+      queue_(raw_queue) {}
 
 void WebSocketSession::run(char const *host, char const *port,
                            char const *target) {
@@ -88,7 +90,7 @@ void WebSocketSession::on_read(beast::error_code ec,
   if (ec)
     return fail(ec, "read");
 
-  std::cout << beast::make_printable(buffer_.data()) << std::endl;
+  // std::cout << beast::make_printable(buffer_.data()) << std::endl;
 
   std::string message = beast::buffers_to_string(buffer_.data());
 
@@ -109,8 +111,4 @@ void WebSocketSession::on_close(beast::error_code ec) {
     return fail(ec, "close");
 
   std::cout << beast::make_printable(buffer_.data()) << std::endl;
-}
-
-std::shared_ptr<ThreadSafeQueue<std::string>> &WebSocketSession::get_queue() {
-  return queue_;
 }

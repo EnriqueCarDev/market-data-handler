@@ -16,14 +16,16 @@ int main() {
 
   ctx.set_verify_mode(ssl::verify_none);
 
-  auto session = std::make_shared<WebSocketSession>(ioc, ctx);
+  auto raw_queue{std::make_shared<ThreadSafeQueue<std::string>>()};
+  auto trade_queue{std::make_shared<ThreadSafeQueue<Trade>>()};
+
+  auto session = std::make_shared<WebSocketSession>(ioc, ctx, raw_queue);
 
   session->run(host.c_str(), port.c_str(), target.c_str());
 
-  std::thread consumer_thread([session] {
-    MessageParser message_parser(session->get_queue());
+  std::thread consumer_thread([raw_queue, trade_queue] {
+    MessageParser message_parser(raw_queue, trade_queue);
     while (true) {
-      std::cout << "inside loop" << std::endl;
       message_parser.run();
     }
   });

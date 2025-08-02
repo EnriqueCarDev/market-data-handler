@@ -27,11 +27,9 @@ public:
 
   void wait_and_pop(T &value) {
     std::unique_lock<std::mutex> lk(mut);
-    std::cout << "waiting to pop" << std::endl;
     data_cond.wait(lk, [this] { return !data_queue.empty(); });
     value = data_queue.front();
     data_queue.pop();
-    std::cout << "popped item" << std::endl;
   }
 
   std::shared_ptr<T> wait_and_pop() {
