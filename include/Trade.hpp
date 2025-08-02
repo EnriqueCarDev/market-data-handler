@@ -4,7 +4,7 @@
 #include <string>
 
 struct Trade {
-  char symbol[12];
+  std::string symbol;
   uint64_t trade_id;
   double price;
   double quantity;

@@ -32,13 +32,13 @@ public:
   void on_read(beast::error_code ec, std::size_t bytes_transferred);
   void do_read();
   void on_close(beast::error_code ec);
-  ThreadSafeQueue<std::string> &get_queue();
+  std::shared_ptr<ThreadSafeQueue<std::string>> &get_queue();
 
 private:
   tcp::resolver resolver_;
   websocket::stream<ssl::stream<beast::tcp_stream>> ws_;
   beast::flat_buffer buffer_;
-  ThreadSafeQueue<std::string> queue_;
+  std::shared_ptr<ThreadSafeQueue<std::string>> queue_;
   std::string host_;
   std::string target_;
 };

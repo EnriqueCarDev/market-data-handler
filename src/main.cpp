@@ -1,6 +1,8 @@
+#include "MessageParser.hpp"
 #include "WebSocketClient.hpp"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
+#include <memory>
 #include <thread>
 
 int main() {
@@ -19,10 +21,10 @@ int main() {
   session->run(host.c_str(), port.c_str(), target.c_str());
 
   std::thread consumer_thread([session] {
+    MessageParser message_parser(session->get_queue());
     while (true) {
-      std::string msg;
-      session->get_queue().wait_and_pop(msg);
-      std::cout << "received Message: " << msg << std::endl;
+      std::cout << "inside loop" << std::endl;
+      message_parser.run();
     }
   });
 
