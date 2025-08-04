@@ -17,12 +17,13 @@ int main() {
 
   ctx.set_verify_mode(ssl::verify_none);
 
-  auto raw_queue{std::make_shared<ThreadSafeQueue<std::string>>()};
+  auto raw_queue{std::make_shared<ThreadSafeQueue<RawMessage>>()};
   auto trade_queue{std::make_shared<ThreadSafeQueue<Trade>>()};
 
-  auto session = std::make_shared<WebSocketSession>(ioc, ctx, raw_queue);
+  auto binance_session = std::make_shared<WebSocketSession>(ioc, ctx, raw_queue,
+                                                            Exchange::BINANCE);
 
-  session->run(host.c_str(), port.c_str(), target.c_str());
+  binance_session->run(host.c_str(), port.c_str(), target.c_str());
   boost::asio::thread_pool parse_pool(2);
 
   boost::asio::post(parse_pool, [raw_queue, trade_queue] {

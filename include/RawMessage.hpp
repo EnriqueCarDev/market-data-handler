@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string_view>
+#include <string>
 
 enum Exchange { BINANCE, KRAKEN, COINBASE };
 
 struct RawMessage {
   Exchange exchange;
-  std::string_view payload;
+  std::string payload;
 };
