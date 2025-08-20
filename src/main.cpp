@@ -1,7 +1,9 @@
 #include "MessageParser.hpp"
+#include "ThreadPool.hpp"
 #include "WebSocketClient.hpp"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <memory>
 #include <thread>
 
@@ -16,14 +18,16 @@ int main() {
 
   ctx.set_verify_mode(ssl::verify_none);
 
-  auto raw_queue{std::make_shared<ThreadSafeQueue<std::string>>()};
+  auto raw_queue{std::make_shared<ThreadSafeQueue<RawMessage>>()};
   auto trade_queue{std::make_shared<ThreadSafeQueue<Trade>>()};
 
-  auto session = std::make_shared<WebSocketSession>(ioc, ctx, raw_queue);
+  auto binance_session = std::make_shared<WebSocketSession>(ioc, ctx, raw_queue,
+                                                            Exchange::BINANCE);
 
-  session->run(host.c_str(), port.c_str(), target.c_str());
+  binance_session->run(host.c_str(), port.c_str(), target.c_str());
 
-  std::thread consumer_thread([raw_queue, trade_queue] {
+  ThreadPool pool;
+  pool.function_input([raw_queue, trade_queue] {
     MessageParser message_parser(raw_queue, trade_queue);
     while (true) {
       message_parser.run();
@@ -31,7 +35,6 @@ int main() {
   });
 
   ioc.run();
-  consumer_thread.join();
 
   return EXIT_SUCCESS;
 }

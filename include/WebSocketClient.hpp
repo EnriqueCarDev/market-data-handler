@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RawMessage.hpp"
 #include "ThreadSafeQueue.hpp"
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/strand.hpp>
@@ -23,7 +24,8 @@ void fail(beast::error_code ec, char const *what);
 class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
 public:
   WebSocketSession(net::io_context &ioc, ssl::context &ctx,
-                   std::shared_ptr<ThreadSafeQueue<std::string>> raw_queue);
+                   std::shared_ptr<ThreadSafeQueue<RawMessage>> raw_queue,
+                   const Exchange exchange);
   void run(char const *host, char const *port, char const *target);
   void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
   void on_connect(beast::error_code ec,
@@ -38,7 +40,8 @@ private:
   tcp::resolver resolver_;
   websocket::stream<ssl::stream<beast::tcp_stream>> ws_;
   beast::flat_buffer buffer_;
-  std::shared_ptr<ThreadSafeQueue<std::string>> queue_;
+  std::shared_ptr<ThreadSafeQueue<RawMessage>> queue_;
   std::string host_;
   std::string target_;
+  Exchange exchange_;
 };

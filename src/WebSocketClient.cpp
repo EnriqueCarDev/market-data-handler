@@ -7,9 +7,10 @@ void fail(beast::error_code ec, char const *what) {
 
 WebSocketSession::WebSocketSession(
     net::io_context &ioc, ssl::context &ctx,
-    std::shared_ptr<ThreadSafeQueue<std::string>> raw_queue)
+    std::shared_ptr<ThreadSafeQueue<RawMessage>> raw_queue,
+    const Exchange exchange)
     : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc), ctx),
-      queue_(raw_queue) {}
+      queue_(raw_queue), exchange_{exchange} {};
 
 void WebSocketSession::run(char const *host, char const *port,
                            char const *target) {
@@ -90,13 +91,10 @@ void WebSocketSession::on_read(beast::error_code ec,
   if (ec)
     return fail(ec, "read");
 
-  // std::cout << beast::make_printable(buffer_.data()) << std::endl;
-
   std::string message = beast::buffers_to_string(buffer_.data());
 
   buffer_.consume(buffer_.size());
-
-  queue_->push(message);
+  queue_->push(RawMessage{exchange_, message});
 
   do_read();
 }
