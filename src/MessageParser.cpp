@@ -23,7 +23,7 @@ Trade MessageParser::parse_trade(const RawMessage &message) {
 void MessageParser::run() {
   RawMessage raw_message;
   raw_queue_->wait_and_pop(raw_message);
-  std::cout << "popped: " << raw_message.payload << std::endl;
+  // std::cout << "popped: " << raw_message.payload << std::endl;
   const Trade trade = parse_trade(raw_message);
   trade_queue_->push(trade);
 }

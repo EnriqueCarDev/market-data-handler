@@ -1,4 +1,5 @@
 #include "MessageParser.hpp"
+#include "ThreadPool.hpp"
 #include "WebSocketClient.hpp"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
@@ -24,9 +25,9 @@ int main() {
                                                             Exchange::BINANCE);
 
   binance_session->run(host.c_str(), port.c_str(), target.c_str());
-  boost::asio::thread_pool parse_pool(2);
 
-  boost::asio::post(parse_pool, [raw_queue, trade_queue] {
+  ThreadPool pool;
+  pool.function_input([raw_queue, trade_queue] {
     MessageParser message_parser(raw_queue, trade_queue);
     while (true) {
       message_parser.run();
@@ -34,7 +35,6 @@ int main() {
   });
 
   ioc.run();
-  parse_pool.join();
 
   return EXIT_SUCCESS;
 }

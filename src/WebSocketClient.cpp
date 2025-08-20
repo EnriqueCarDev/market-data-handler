@@ -91,12 +91,9 @@ void WebSocketSession::on_read(beast::error_code ec,
   if (ec)
     return fail(ec, "read");
 
-  // std::cout << beast::make_printable(buffer_.data()) << std::endl;
-
   std::string message = beast::buffers_to_string(buffer_.data());
 
   buffer_.consume(buffer_.size());
-
   queue_->push(RawMessage{exchange_, message});
 
   do_read();
